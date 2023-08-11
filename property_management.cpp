@@ -41,6 +41,8 @@ namespace CSVHandler
         if (file.is_open())
         {
             std::string line;
+
+            // Read the header line to skip it
             getline(file, line);
 
             numProperties = 0;
@@ -52,6 +54,9 @@ namespace CSVHandler
             file.seekg(0, std::ios::beg);
 
             properties = new Property[numProperties];
+
+            // Skip the header line again
+            getline(file, line);
 
             for (int i = 0; i <= numProperties; i++)
             {
