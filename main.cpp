@@ -1,36 +1,29 @@
-#include "property_management.cpp"
+#include "property.cpp"
 #include "user.cpp"
+#include "init.hpp"
 
 int Manager::managerCount = 0;
-int Tenant::tenantCount = 0; // Khởi tạo tenantCount bắt đầu từ 1
+int Tenant::tenantCount = 0;
 
 int main()
 {
-    int numProperties;
-    Property *properties = CSVHandler::importCSV("mudah-apartment-kl-selangor.csv", numProperties);
+    Property *properties = nullptr;
+    int numProperties = 0;
 
-    const int maxUsers = 10;
-    User **users = new User *[maxUsers];
+    User **users = nullptr;
     int numUsers = 0;
 
-    users[numUsers++] = new Tenant("tenant1", "tenantpass1", 30, "John", "0177663555", "john@gmail.com", "Active");
-    users[numUsers++] = new Tenant("tenant2", "tenantpass2", 24, "Mary", "0170726486", "mary@gmail.com", "Active");
-    users[numUsers++] = new Tenant("tenant3", "tenantpass3", 18, "Clara", "0162630697", "clara@hotmail.com", "Inactive");
-    users[numUsers++] = new Tenant("tenant4", "tenantpass4", 27, "David", "0188365828", "david@gmail.com", "Active");
-    users[numUsers++] = new Tenant("tenant5", "tenantpass5", 35, "Peter", "0183205921", "peter@hotmail.com", "Inactive");
-    users[numUsers++] = new Manager("manager", "managerpass", "M1", "Active");
-    users[numUsers++] = new Admin("admin", "adminpass", "A1");
+    DoublyLinkedList rentRequestList;
 
-    std::string newUsername;
-    std::string newPassword;
-    std::string newUserRole;
+    initializeData(properties, numProperties, users, numUsers);
+    initializeFavoriteProperties(users, numUsers, properties, numProperties);
 
     int choice;
     bool running = true;
 
     while (running)
     {
-        std::cout << "Main Menu:\n";
+        std::cout << "\nWelcome to Klang Valley Accommodation:\n";
         std::cout << "1. Register Tenant\n";
         std::cout << "2. Display all property's details\n";
         std::cout << "3. Log in\n";
@@ -87,7 +80,7 @@ int main()
 
                     while (loggedIn)
                     {
-                        std::cout << "Tenant Menu:\n";
+                        std::cout << "\nTenant Menu:\n";
                         std::cout << "1. Sort property\n";
                         std::cout << "2. Search property\n";
                         std::cout << "3. Save favourite property\n";
@@ -110,15 +103,37 @@ int main()
                             break;
                         case 3:
                         {
+                            int subChoice;
+                            std::cout << "\nMenu:\n";
+                            std::cout << "1. Add favorite property\n";
+                            std::cout << "2. Display favorite properties\n";
+                            std::cout << "Enter your choice: ";
+                            std::cin >> subChoice;
+
+                            if (subChoice == 1)
+                            {
+                                std::string propertyID;
+                                std::cout << "Enter property ID to add to favorites: ";
+                                std::cin >> propertyID;
+                                tenant->addFavoriteProperty(propertyID, properties, numProperties);
+                            }
+                            else if (subChoice == 2)
+                            {
+                                tenant->displayFavoriteProperties(properties, numProperties);
+                            }
+                            else
+                            {
+                                std::cout << "Invalid choice. Try again.\n";
+                            }
                             break;
                         }
                         case 4:
-                            // Place rent request
-                            // ...
+                        {
+                            tenant->placeRentRequest(rentRequestList, properties, numProperties); // Pass rentRequestList
                             break;
+                        }
                         case 5:
-                            // Display renting history
-                            // ...
+                            tenant->displayRentingHistory(rentRequestList);
                             break;
                         case 6:
                             tenant->logout();
@@ -138,7 +153,7 @@ int main()
 
                     while (loggedIn)
                     {
-                        std::cout << "Manager Menu:\n";
+                        std::cout << "\nManager Menu:\n";
                         std::cout << "1. Display all registered tenant's detail\n";
                         std::cout << "2. Search tenant's details\n";
                         std::cout << "3. Delete tenant\n";
@@ -155,20 +170,16 @@ int main()
                             manager->displayAllTenantsDetails(users, numUsers);
                             break;
                         case 2:
-                            // Search tenant's details
-                            // ...
+                            manager->searchTenantDetails(users, numUsers);
                             break;
                         case 3:
-                            // Delete tenant
-                            // ...
+                            manager->deleteInactiveTenants(users, numUsers);
                             break;
                         case 4:
-                            // Summarize top 10 property
-                            // ...
+                            manager->displayAllTenantFavorites(users, numUsers, properties, numProperties);
                             break;
                         case 5:
-                            // Manage tenancy process
-                            // ...
+                            manager->displayRentRequests(rentRequestList);
                             break;
                         case 6:
                             // Manage payment
@@ -192,10 +203,10 @@ int main()
 
                     while (loggedIn)
                     {
-                        std::cout << "Admin Menu:\n";
+                        std::cout << "\nAdmin Menu:\n";
                         std::cout << "1. Add new manager\n";
                         std::cout << "2. Modify manager's status\n";
-                        std::cout << "3. Display all tenants & property information\n";
+                        std::cout << "3. Display tenants & property information\n";
                         std::cout << "4. Logout\n";
                         std::cout << "Enter your choice: ";
                         std::cin >> choice;
@@ -203,15 +214,14 @@ int main()
                         switch (choice)
                         {
                         case 1:
-                            Manager::addManager(users, numUsers);
+                            admin->addManager(users, numUsers);
                             break;
                         case 2:
                             admin->displayAllManagersDetails(users, numUsers);
                             admin->modifyManagerStatus(users, numUsers);
                             break;
                         case 3:
-                            // Display all tenants & property information
-                            // ...
+                            admin->displayMenu(users, numUsers, properties, numProperties);
                             break;
                         case 4:
                             admin->logout();
@@ -227,7 +237,7 @@ int main()
             }
             else
             {
-                std::cout << "Login failed. Invalid username or password.\n";
+                std::cout << "Login failed\n";
             }
             break;
         }
